@@ -1,5 +1,5 @@
-# generic files to ignore
-.*
+# direnv
+.direnv/
 
 # python temp paths
 __pycache__/
