@@ -78,7 +78,12 @@ else()
     # Extract version.
     string(REGEX REPLACE ".*version: ([0-9]+)\\.([0-9]+).*" "\\1.\\2" XCODE_VERSION "${_cltools_pkg_info}")
     # SDK directory.
-    set(XCODE_SDK_DIR "${XCODE_DEVELOPER_DIR}/SDKs")
+    # Check if we're using a Nix-provided SDK
+    if(XCODE_DEVELOPER_DIR MATCHES "/nix/store/")
+      set(XCODE_SDK_DIR "${XCODE_DEVELOPER_DIR}/Platforms/MacOSX.platform/Developer/SDKs")
+    else()
+      set(XCODE_SDK_DIR "${XCODE_DEVELOPER_DIR}/SDKs")
+    endif()
 
     # Detect SDK version to use.
     if(NOT DEFINED OSX_SYSTEM)

@@ -26,8 +26,66 @@ endfunction()
 # Find system provided libraries.
 
 # Find system ZLIB, not the pre-compiled one supplied with OpenCollada.
-set(ZLIB_ROOT /usr)
+# Check if we're in a Nix environment
+if(DEFINED ENV{NIX_STORE} OR XCODE_DEVELOPER_DIR MATCHES "/nix/store/")
+  # Find zlib in Nix store - we need both dev package for headers and runtime package for libs
+  file(GLOB NIX_ZLIB_DEV_DIRS "/nix/store/*-zlib-*-dev")
+  file(GLOB NIX_ZLIB_RUNTIME_DIRS "/nix/store/*-zlib-1.3*")
+  
+  if(NIX_ZLIB_DEV_DIRS AND NIX_ZLIB_RUNTIME_DIRS)
+    # Use the first packages found
+    list(GET NIX_ZLIB_DEV_DIRS 0 NIX_ZLIB_DEV_DIR)
+    list(GET NIX_ZLIB_RUNTIME_DIRS 0 NIX_ZLIB_RUNTIME_DIR)
+    
+    # Set variables explicitly for FindZLIB
+    set(ZLIB_INCLUDE_DIR "${NIX_ZLIB_DEV_DIR}/include")
+    set(ZLIB_LIBRARY "${NIX_ZLIB_RUNTIME_DIR}/lib/libz.dylib")
+    
+    message(STATUS "Using Nix-provided zlib:")
+    message(STATUS "  Include dir: ${ZLIB_INCLUDE_DIR}")
+    message(STATUS "  Library: ${ZLIB_LIBRARY}")
+    
+    # Make sure these are in the cache
+    set(ZLIB_INCLUDE_DIR "${ZLIB_INCLUDE_DIR}" CACHE PATH "Path to zlib include directory")
+    set(ZLIB_LIBRARY "${ZLIB_LIBRARY}" CACHE FILEPATH "Path to zlib library")
+    set(ZLIB_FOUND TRUE CACHE BOOL "Whether zlib was found")
+  else()
+    # Fallback to /usr if no Nix zlib found
+    set(ZLIB_ROOT /usr)
+    message(STATUS "Nix zlib packages not found completely, falling back to /usr")
+  endif()
+else()
+  # Non-Nix environment, use standard path
+  set(ZLIB_ROOT /usr)
+endif()
 find_package(ZLIB REQUIRED)
+
+# Handle BZip2 in Nix environment
+if(DEFINED ENV{NIX_STORE} OR XCODE_DEVELOPER_DIR MATCHES "/nix/store/")
+  # Find bzip2 in Nix store - we need both dev package for headers and runtime package for libs
+  file(GLOB NIX_BZIP2_DEV_DIRS "/nix/store/*-bzip2-*-dev")
+  file(GLOB NIX_BZIP2_RUNTIME_DIRS "/nix/store/*-bzip2-1.0*")
+  
+  if(NIX_BZIP2_DEV_DIRS AND NIX_BZIP2_RUNTIME_DIRS)
+    # Use the first packages found
+    list(GET NIX_BZIP2_DEV_DIRS 0 NIX_BZIP2_DEV_DIR)
+    list(GET NIX_BZIP2_RUNTIME_DIRS 0 NIX_BZIP2_RUNTIME_DIR)
+    
+    # Set variables explicitly for FindBZip2
+    set(BZIP2_INCLUDE_DIR "${NIX_BZIP2_DEV_DIR}/include")
+    set(BZIP2_LIBRARIES "${NIX_BZIP2_RUNTIME_DIR}/lib/libbz2.dylib")
+    
+    message(STATUS "Using Nix-provided BZip2:")
+    message(STATUS "  Include dir: ${BZIP2_INCLUDE_DIR}")
+    message(STATUS "  Library: ${BZIP2_LIBRARIES}")
+    
+    # Make sure these are in the cache
+    set(BZIP2_INCLUDE_DIR "${BZIP2_INCLUDE_DIR}" CACHE PATH "Path to bzip2 include directory")
+    set(BZIP2_LIBRARIES "${BZIP2_LIBRARIES}" CACHE FILEPATH "Path to bzip2 library")
+    set(BZIP2_FOUND TRUE CACHE BOOL "Whether bzip2 was found")
+  endif()
+endif()
+
 find_package(BZip2 REQUIRED)
 list(APPEND ZLIB_LIBRARIES ${BZIP2_LIBRARIES})
 
