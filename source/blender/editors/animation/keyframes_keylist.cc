@@ -274,10 +274,12 @@ const ActKeyColumn *ED_keylist_find_closest(const AnimKeylist *keylist, const fl
   if (ED_keylist_is_empty(keylist)) {
     return nullptr;
   }
-  if (cfra <= keylist->runtime.key_columns.first().cfra) {
+  /* Need to check against #BEZT_BINARYSEARCH_THRESH because #ED_keylist_find_prev does so as well.
+   * Not doing that here could cause that function to return a nullptr. */
+  if (cfra - keylist->runtime.key_columns.first().cfra < BEZT_BINARYSEARCH_THRESH) {
     return &keylist->runtime.key_columns.first();
   }
-  if (cfra >= keylist->runtime.key_columns.last().cfra) {
+  if (cfra - keylist->runtime.key_columns.last().cfra > BEZT_BINARYSEARCH_THRESH) {
     keylist->runtime.key_columns.last();
   }
   const ActKeyColumn *prev = ED_keylist_find_prev(keylist, cfra);
@@ -867,8 +869,20 @@ static void compute_keyblock_data(ActKeyBlockInfo *info,
   }
 
   /* Remember non-bezier interpolation info. */
-  if (prev->ipo != BEZT_IPO_BEZ) {
-    info->flag |= ACTKEYBLOCK_FLAG_NON_BEZIER;
+  switch (eBezTriple_Interpolation(prev->ipo)) {
+    case BEZT_IPO_BEZ:
+      break;
+    case BEZT_IPO_LIN:
+      info->flag |= ACTKEYBLOCK_FLAG_IPO_LINEAR;
+      break;
+    case BEZT_IPO_CONST:
+      info->flag |= ACTKEYBLOCK_FLAG_IPO_CONSTANT;
+      break;
+    default:
+      /* For automatic bezier interpolations, such as easings (cubic, circular, etc), and dynamic
+       * (back, bounce, elastic). */
+      info->flag |= ACTKEYBLOCK_FLAG_IPO_OTHER;
+      break;
   }
 
   info->sel = BEZT_ISSEL_ANY(prev) || BEZT_ISSEL_ANY(beztn);
@@ -1128,6 +1142,8 @@ void scene_to_keylist(bDopeSheet *ads,
   ac.ads = ads;
   ac.data = &dummy_chan;
   ac.datatype = ANIMCONT_CHANNEL;
+  ac.filters.flag = eDopeSheet_FilterFlag(ads->filterflag);
+  ac.filters.flag2 = eDopeSheet_FilterFlag2(ads->filterflag2);
 
   /* Get F-Curves to take keyframes from. */
   const eAnimFilter_Flags filter = ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FCURVESONLY;
@@ -1174,6 +1190,8 @@ void ob_to_keylist(bDopeSheet *ads,
   ac.ads = ads;
   ac.data = &dummy_chan;
   ac.datatype = ANIMCONT_CHANNEL;
+  ac.filters.flag = eDopeSheet_FilterFlag(ads->filterflag);
+  ac.filters.flag2 = eDopeSheet_FilterFlag2(ads->filterflag2);
 
   /* Get F-Curves to take keyframes from. */
   const eAnimFilter_Flags filter = ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FCURVESONLY;
@@ -1212,6 +1230,8 @@ void cachefile_to_keylist(bDopeSheet *ads,
   ac.ads = ads;
   ac.data = &dummy_chan;
   ac.datatype = ANIMCONT_CHANNEL;
+  ac.filters.flag = eDopeSheet_FilterFlag(ads->filterflag);
+  ac.filters.flag2 = eDopeSheet_FilterFlag2(ads->filterflag2);
 
   /* Get F-Curves to take keyframes from. */
   ListBase anim_data = {nullptr, nullptr};

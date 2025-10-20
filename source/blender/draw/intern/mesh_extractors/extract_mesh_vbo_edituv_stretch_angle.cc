@@ -62,7 +62,7 @@ static void edituv_get_edituv_stretch_angle(float auv[2][2],
   r_stretch->uv_angles[0] = v2_to_short_angle(auv[0]);
   r_stretch->uv_angles[1] = v2_to_short_angle(auv[1]);
   /* Compute 3D angle here. */
-  r_stretch->angle = angle_normalized_v3v3(av[0], av[1]) * float(M_1_PI) * SHRT_MAX;
+  r_stretch->angle = angle_normalized_v3v3(av[0], av[1]) * float(M_1_PI);
 
 #if 0 /* here for reference, this is done in shader now. */
   float uvang = angle_normalized_v2v2(auv0, auv1);
@@ -89,7 +89,7 @@ static void extract_uv_stretch_angle_bm(const MeshRenderData &mr,
     do {
       const int l_index = BM_elem_index_get(l_iter);
 
-      const float(*luv)[2], (*luv_next)[2];
+      const float (*luv)[2], (*luv_next)[2];
       BMLoop *l_next = l_iter->next;
       if (l_iter == BM_FACE_FIRST_LOOP(face)) {
         /* First loop in face. */
@@ -190,8 +190,8 @@ gpu::VertBufPtr extract_edituv_stretch_angle(const MeshRenderData &mr)
   static const GPUVertFormat format = []() {
     GPUVertFormat format{};
     /* Waning: adjust #UVStretchAngle struct accordingly. */
-    GPU_vertformat_attr_add(&format, "angle", GPU_COMP_F32, 1, GPU_FETCH_FLOAT);
-    GPU_vertformat_attr_add(&format, "uv_angles", GPU_COMP_I16, 2, GPU_FETCH_INT_TO_FLOAT_UNIT);
+    GPU_vertformat_attr_add(&format, "angle", gpu::VertAttrType::SFLOAT_32);
+    GPU_vertformat_attr_add(&format, "uv_angles", gpu::VertAttrType::SNORM_16_16);
     return format;
   }();
 
@@ -213,8 +213,8 @@ static const GPUVertFormat &get_edituv_stretch_angle_format_subdiv()
   static const GPUVertFormat format = []() {
     GPUVertFormat format{};
     /* Waning: adjust #UVStretchAngle struct accordingly. */
-    GPU_vertformat_attr_add(&format, "angle", GPU_COMP_F32, 1, GPU_FETCH_FLOAT);
-    GPU_vertformat_attr_add(&format, "uv_angles", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+    GPU_vertformat_attr_add(&format, "angle", gpu::VertAttrType::SFLOAT_32);
+    GPU_vertformat_attr_add(&format, "uv_angles", gpu::VertAttrType::SFLOAT_32_32);
     return format;
   }();
   return format;
@@ -238,7 +238,7 @@ gpu::VertBufPtr extract_edituv_stretch_angle_subdiv(const MeshRenderData &mr,
   if (!pos) {
     pos = GPU_vertbuf_calloc();
     static const GPUVertFormat pos_format = GPU_vertformat_from_attribute(
-        "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
+        "pos", gpu::VertAttrType::SFLOAT_32_32_32);
     GPU_vertbuf_init_build_on_device(*pos, pos_format, subdiv_full_vbo_size(mr, subdiv_cache));
     draw_subdiv_extract_pos(subdiv_cache, pos, nullptr);
   }
@@ -248,18 +248,18 @@ gpu::VertBufPtr extract_edituv_stretch_angle_subdiv(const MeshRenderData &mr,
   const CustomData *cd_ldata = (mr.extract_type == MeshExtractType::Mesh) ? &mr.mesh->corner_data :
                                                                             &mr.bm->ldata;
 
-  uint32_t uv_layers = cache.cd_used.uv;
+  VectorSet<std::string> uv_layers = cache.cd_used.uv;
   /* HACK to fix #68857 */
   if (mr.extract_type == MeshExtractType::BMesh && cache.cd_used.edit_uv == 1) {
-    int layer = CustomData_get_active_layer(cd_ldata, CD_PROP_FLOAT2);
-    if (layer != -1 && !CustomData_layer_is_anonymous(cd_ldata, CD_PROP_FLOAT2, layer)) {
-      uv_layers |= (1 << layer);
+    if (const char *active_name = CustomData_get_active_layer_name(cd_ldata, CD_PROP_FLOAT2)) {
+      uv_layers.add_as(active_name);
     }
   }
 
   int uvs_offset = 0;
   for (int i = 0; i < MAX_MTFACE; i++) {
-    if (uv_layers & (1 << i)) {
+    const char *name = CustomData_get_layer_name(cd_ldata, CD_PROP_FLOAT2, i);
+    if (uv_layers.contains_as(name)) {
       if (i == CustomData_get_active_layer(cd_ldata, CD_PROP_FLOAT2)) {
         break;
       }
