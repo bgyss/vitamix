@@ -4,9 +4,17 @@
 
 # ./blender.bin --background --python tests/python/bl_pyapi_bpy_path.py -- --verbose
 import unittest
+import sys
+import os
+
+# Add modules directory to path for test utilities
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "modules"))
+from test_markers import unit, fast
 
 
 class TestBpyPath(unittest.TestCase):
+    @unit
+    @fast
     def test_ensure_ext(self):
         from bpy.path import ensure_ext
 
