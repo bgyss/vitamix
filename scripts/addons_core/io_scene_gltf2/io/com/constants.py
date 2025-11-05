@@ -157,3 +157,25 @@ BLENDER_COAT_ROUGHNESS = 0.03
 
 # Rounding digit used for normal/tangent rounding
 ROUNDING_DIGIT = 4
+
+# glTF extensions that are officially supported by the importer
+GLTF_EXTENSIONS_MANAGED = [
+    'KHR_materials_pbrSpecularGlossiness',
+    'KHR_lights_punctual',
+    'KHR_materials_unlit',
+    'KHR_texture_transform',
+    'KHR_materials_clearcoat',
+    'KHR_mesh_quantization',
+    'EXT_mesh_gpu_instancing',
+    'KHR_draco_mesh_compression',
+    'KHR_materials_variants',
+    'KHR_materials_emissive_strength',
+    'KHR_materials_transmission',
+    'KHR_materials_specular',
+    'KHR_materials_sheen',
+    'KHR_materials_ior',
+    'KHR_animation_pointer',
+    'KHR_materials_volume',
+    'EXT_texture_webp',
+    'KHR_materials_anisotropy'
+]

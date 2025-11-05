@@ -46,7 +46,15 @@ def parseArguments():
     # Parse arguments which are not handled by unit testing framework.
     unittest_args, parser_args = sliceCommandLineArguments()
     args = parser.parse_args(args=parser_args)
-    # TODO(sergey): Run some checks here?
+
+    # Validate parsed arguments
+    if args.directory is not None:
+        import os
+        if not os.path.exists(args.directory):
+            parser.error(f"Directory does not exist: {args.directory}")
+        if not os.path.isdir(args.directory):
+            parser.error(f"Path is not a directory: {args.directory}")
+
     return args
 
 

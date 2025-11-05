@@ -112,7 +112,43 @@ def test_lookup_coverage():
 
 
 def test_language_coverage():
-    pass  # TODO
+    """
+    Ensure the language lookup table is complete and properly configured.
+
+    Verifies that:
+    1. manual_language_code() returns a valid language code
+    2. The URL manual prefix is properly formatted for the current language
+    3. The language code is either a valid ISO code or 'en' (default fallback)
+    """
+    import _rna_manual_reference as rna_manual_reference
+
+    # Get the current language code
+    lang_code = bpy.utils.manual_language_code()
+
+    # Valid language codes should be lowercase and either 'en' or contain underscore
+    # (e.g., 'en', 'fr_FR', 'zh_HANS', etc.)
+    assert isinstance(lang_code, str), f"Language code must be a string, got {type(lang_code)}"
+    assert len(lang_code) >= 2, f"Language code '{lang_code}' is too short"
+    assert lang_code == 'en' or '_' in lang_code or lang_code in ('es', 'eo', 'ha', 'ab', 'ka', 'ta', 'km', 'sw', 'da', 'ur'), \
+        f"Language code '{lang_code}' has unexpected format (should be 'en' or contain underscore)"
+
+    # Verify the URL manual prefix is properly formatted
+    # Should be in format: https://docs.blender.org/manual/{lang}/{major}.{minor}/
+    assert rna_manual_reference.url_manual_prefix.startswith("https://docs.blender.org/manual/"), \
+        f"URL manual prefix has unexpected format: {rna_manual_reference.url_manual_prefix}"
+    assert rna_manual_reference.url_manual_prefix.endswith("/"), \
+        f"URL manual prefix should end with '/': {rna_manual_reference.url_manual_prefix}"
+
+    # Verify the URL contains the language code
+    assert f"/{lang_code}/" in rna_manual_reference.url_manual_prefix, \
+        f"URL manual prefix should contain language code '{lang_code}': {rna_manual_reference.url_manual_prefix}"
+
+    # Verify the URL contains version numbers
+    version_str = f"/{bpy.app.version[0]}.{bpy.app.version[1]}/"
+    assert version_str in rna_manual_reference.url_manual_prefix, \
+        f"URL manual prefix should contain version '{version_str}': {rna_manual_reference.url_manual_prefix}"
+
+    print(f"Language coverage test passed for language code: '{lang_code}'")
 
 
 def test_urls():

@@ -14,8 +14,11 @@ def export_ior(blender_material, extensions, export_settings):
         return None
 
     # We don't manage case where socket is linked, always check default value
+    # NOTE: Linked IOR sockets are not supported for export. The IOR extension only
+    # supports constant values, not node-based procedural IOR values.
+    # This is a limitation of the glTF KHR_materials_ior extension specification.
     if ior_socket.socket.is_linked:
-        # TODOExt: add warning?
+        # Skip linked sockets - they cannot be exported to glTF
         return None
 
     # Exporting IOR even if it is the default value

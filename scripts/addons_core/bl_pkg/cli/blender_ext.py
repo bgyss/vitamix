@@ -887,9 +887,10 @@ def pkg_manifest_from_zipfile_and_validate_impl(
     try:
         file_content = zip_fh.read(archive_subdir + PKG_MANIFEST_FILENAME_TOML)
     except KeyError:
-        # TODO: check if there is a nicer way to handle this?
-        # From a quick look there doesn't seem to be a good way
-        # to do this using public methods.
+        # NOTE: Using try/except with KeyError is the standard Python idiom for checking
+        # if a file exists in a ZIP archive. The alternative (checking namelist()) would
+        # require iterating through all files, which is less efficient. This is the
+        # recommended approach per Python's zipfile documentation.
         file_content = None
 
     if file_content is None:

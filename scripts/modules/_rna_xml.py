@@ -391,9 +391,12 @@ def xml_file_run(
 
     for rna_path, xml_tag in rna_map:
 
-        # first get xml
-        # TODO, error check
-        xml_node = bpy_xml.getElementsByTagName(xml_tag)[0]
+        # First get XML node with error checking
+        xml_nodes_by_tag = bpy_xml.getElementsByTagName(xml_tag)
+        if not xml_nodes_by_tag:
+            print(f"Warning: XML tag '{xml_tag}' not found for RNA path '{rna_path}', skipping")
+            continue
+        xml_node = xml_nodes_by_tag[0]
 
         value = _get_context_val(context, rna_path)
 

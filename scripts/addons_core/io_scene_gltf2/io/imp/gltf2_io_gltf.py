@@ -36,27 +36,9 @@ class glTFImporter():
 
         self.log = Log(import_settings['loglevel'])
 
-        # TODO: move to a com place?
-        self.extensions_managed = [
-            'KHR_materials_pbrSpecularGlossiness',
-            'KHR_lights_punctual',
-            'KHR_materials_unlit',
-            'KHR_texture_transform',
-            'KHR_materials_clearcoat',
-            'KHR_mesh_quantization',
-            'EXT_mesh_gpu_instancing',
-            'KHR_draco_mesh_compression',
-            'KHR_materials_variants',
-            'KHR_materials_emissive_strength',
-            'KHR_materials_transmission',
-            'KHR_materials_specular',
-            'KHR_materials_sheen',
-            'KHR_materials_ior',
-            'KHR_animation_pointer',
-            'KHR_materials_volume',
-            'EXT_texture_webp',
-            'KHR_materials_anisotropy'
-        ]
+        # Import list of managed extensions from common constants
+        from ..com.constants import GLTF_EXTENSIONS_MANAGED
+        self.extensions_managed = list(GLTF_EXTENSIONS_MANAGED)
 
         # Add extensions required supported by custom import extensions
         for import_extension in self.import_user_extensions:

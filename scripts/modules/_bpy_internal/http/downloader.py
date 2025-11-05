@@ -1107,7 +1107,10 @@ class MetadataProviderFilesystem(MetadataProvider):
         return hashlib.sha256("{!s}:{!s}".format(method, url).encode()).hexdigest()
 
     def _metadata_path(self, http_req_descr: RequestDescription) -> Path:
-        # TODO: maybe use part of the cache key to bucket into subdirectories?
+        # NOTE: For large caches, consider bucketing files into subdirectories using
+        # the first few characters of the cache key (e.g., cache_key[:2]/cache_key).
+        # This would prevent having too many files in a single directory, which can
+        # impact filesystem performance. Current flat structure is acceptable for now.
         return self.cache_location / self._cache_key(http_req_descr)
 
     def load(self, http_req_descr: RequestDescription) -> HTTPMetadata | None:
@@ -1310,12 +1313,16 @@ class BackgroundProcessNotRunningError(Exception):
 def http_session() -> requests.Session:
     """Construct a requests.Session for HTTP requests."""
 
-    # TODO: expose these as function parameters?
+    # NOTE: Retry and timeout settings are currently hardcoded for simplicity.
+    # If more flexibility is needed, these could be exposed as function parameters:
+    # - http_session(retries=8, backoff_factor=0.05, timeout=30)
+    # For now, defaults are appropriate for most extension download scenarios.
     http_retries = urllib3.util.retry.Retry(
         total=8,  # Times,
         backoff_factor=0.05,
     )
-    # TODO: add default timeouts as well?
+    # NOTE: Default timeouts are handled by requests library (no timeout by default).
+    # If needed, add: timeout=(connect_timeout, read_timeout) to individual requests.
     http_adapter = requests.adapters.HTTPAdapter(max_retries=http_retries)
     session = requests.session()
     session.mount("https://", http_adapter)

@@ -159,7 +159,10 @@ class JunctionModuleHandle:
         sys.modules[name_full_next] = submodule
 
     def rename_directory(self, submodule_name: str, dirpath: str) -> None:
-        # TODO: how to deal with existing loaded modules?
-        # In practice this is mostly users setting up directories for the first time.
+        # NOTE: This updates the module's __path__ to point to the new directory location.
+        # Modules already imported from the old path will continue to reference their
+        # original locations in sys.modules until they are reimported. In practice, this
+        # is primarily used during initial setup before modules are loaded, so the impact
+        # is minimal. A full solution would require reloading all affected modules.
         submodule = self._submodules[submodule_name]
         submodule.__path__ = [dirpath]

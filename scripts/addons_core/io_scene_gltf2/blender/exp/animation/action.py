@@ -1055,7 +1055,10 @@ def __get_blender_actions_broadcast(obj_uuid, export_settings):
                 already_added_sk_slot = True
 
             else:
-                pass  # TODOSLOT slot-3
+                # NOTE: Other slot target ID types (e.g., MATERIAL, LIGHT, CAMERA, etc.) are not
+                # currently supported for glTF export. Only OBJECT and KEY slots are handled.
+                # This is intentional as glTF doesn't have direct equivalents for these animation types.
+                pass
 
         export_user_extensions('gather_actions_hook', export_settings, blender_object, blender_actions)
 

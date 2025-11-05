@@ -750,7 +750,9 @@ def get_node_socket(blender_material_node_tree, type, name):
     :return: a blender NodeSocket for a given type
     """
     nodes = get_material_nodes(blender_material_node_tree, [blender_material_node_tree], type)
-    # TODOSNode : Why checking outputs[0] ? What about alpha for texture node, that is outputs[1] ????
+    # NOTE: Currently only checking outputs[0] (first output). This doesn't handle cases where
+    # other outputs need to be checked (e.g., alpha channel in texture nodes is outputs[1]).
+    # This is a known limitation that should be addressed to support all output sockets properly.
     nodes = [node for node in nodes if check_if_is_linked_to_active_output(node[0].outputs[0], node[1])]
     inputs = sum([[(input, node[1]) for input in node[0].inputs if input.name == name] for node in nodes], [])
     if inputs:
@@ -935,8 +937,8 @@ def check_if_is_linked_to_active_output(shader_socket, group_path):
             socket = [s for s in sockets if s.name == socket_name][0]
             new_group_path = group_path.copy()
             new_group_path.append(link.to_node)
-            # TODOSNode : Why checking outputs[0] ? What about alpha for texture node, that is outputs[1] ????
-            # recursive until find an output material node
+            # NOTE: Currently only checking first output - see limitation note about outputs[0] vs outputs[1]
+            # Recursively search until we find an output material node
             ret = check_if_is_linked_to_active_output(socket, new_group_path)
             if ret is True:
                 return True
@@ -948,8 +950,8 @@ def check_if_is_linked_to_active_output(shader_socket, group_path):
             sockets = group_path[-1].outputs
             socket = [s for s in sockets if s.name == socket_name][0]
             new_group_path = group_path[:-1]
-            # TODOSNode : Why checking outputs[0] ? What about alpha for texture node, that is outputs[1] ????
-            # recursive until find an output material node
+            # NOTE: Currently only checking first output - see limitation note about outputs[0] vs outputs[1]
+            # Recursively search until we find an output material node
             ret = check_if_is_linked_to_active_output(socket, new_group_path)
             if ret is True:
                 return True
@@ -959,10 +961,11 @@ def check_if_is_linked_to_active_output(shader_socket, group_path):
             return True
 
         if len(link.to_node.outputs) > 0:  # ignore non active output, not having output sockets
-            # TODOSNode : Why checking outputs[0] ? What about alpha for texture node, that is outputs[1] ????
+            # NOTE: Currently only checking first output - see limitation note about outputs[0] vs outputs[1]
+            # Recursively search until we find an output material node
             ret = check_if_is_linked_to_active_output(
                 link.to_node.outputs[0],
-                group_path)  # recursive until find an output material node
+                group_path)
             if ret is True:
                 return True
 

@@ -59,7 +59,9 @@ def _wheels_from_dir(dirpath: str) -> tuple[
         paths_unused.add(name)
         if not entry.is_dir():
             continue
-        # TODO: is this part of the spec?
+        # NOTE: Per PEP 427 (Wheel Binary Package Format), installed wheel packages
+        # contain a {distribution}-{version}.dist-info directory. We check for the
+        # "-info" suffix to find .dist-info (or .egg-info) metadata directories.
         name = entry.name
         if not name.endswith("-info"):
             continue

@@ -112,7 +112,9 @@ class AttributeBuilder:
         return item_obj
 
     def __setitem__(self, item, value):
-        pass  # TODO?
+        # Track item assignments for introspection, similar to __getitem__
+        item_obj = NewAttr(self._attr + "[" + repr(item) + "]", value)
+        self._item_set.append(item_obj)
 
     def __repr__(self):
         return self._attr

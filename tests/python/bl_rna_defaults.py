@@ -70,7 +70,14 @@ def validate_defaults(test_id, o):
                 if val_real != val_default:
                     warning(prop_id, val_real, val_default)
             else:
-                pass  # TODO, array defaults
+                # Check array defaults
+                val_real = getattr(o, prop_id)
+                val_default = prop.default_array
+                # Compare arrays element by element
+                if len(val_real) == len(val_default):
+                    for i, (real, default) in enumerate(zip(val_real, val_default)):
+                        if real != default:
+                            warning(f"{prop_id}[{i}]", real, default)
         elif prop_type == 'FLOAT':
             # array_length = prop.array_length
             if not prop.is_array:
@@ -79,7 +86,14 @@ def validate_defaults(test_id, o):
                 if val_real != val_default:
                     warning(prop_id, val_real, val_default, repr_fn=repr_float_32)
             else:
-                pass  # TODO, array defaults
+                # Check array defaults
+                val_real = getattr(o, prop_id)
+                val_default = prop.default_array
+                # Compare arrays element by element
+                if len(val_real) == len(val_default):
+                    for i, (real, default) in enumerate(zip(val_real, val_default)):
+                        if real != default:
+                            warning(f"{prop_id}[{i}]", real, default, repr_fn=repr_float_32)
         elif prop_type == 'ENUM':
             val_real = getattr(o, prop_id)
             if prop.is_enum_flag:

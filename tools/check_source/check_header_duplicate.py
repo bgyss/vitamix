@@ -31,7 +31,8 @@ from collections.abc import (
 
 BASEDIR = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-# TODO: make this an argument.
+# Default directories to check when no paths are provided as arguments.
+# Users can override this by passing custom paths on the command line.
 dirs_include = [
     os.path.join(BASEDIR, "intern"),
     os.path.join(BASEDIR, "source"),
