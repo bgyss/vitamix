@@ -302,7 +302,7 @@ static void create_edit_points_position(const bke::CurvesGeometry &curves,
   const int points_num = positions.size();
 
   static const GPUVertFormat format = GPU_vertformat_from_attribute(
-      "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+      "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
   GPU_vertbuf_init_with_format(vbo, format);
   GPU_vertbuf_data_alloc(vbo, handles_and_points_num(points_num, bezier_offsets));
 
@@ -1012,7 +1012,7 @@ static void create_edit_points_position_vbo(
     CurvesBatchCache &cache)
 {
   static const GPUVertFormat format = GPU_vertformat_from_attribute(
-      "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+      "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
 
   /* TODO: Deform curves using deformations. */
   const Span<float3> positions = curves.evaluated_positions();

@@ -464,7 +464,7 @@ static void curve_create_curves_pos(CurveRenderData *rdata, gpu::VertBuf *vbo_cu
 
   static const GPUVertFormat format = [&]() {
     GPUVertFormat format{};
-    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
     return format;
   }();
 
@@ -547,7 +547,7 @@ static void curve_create_edit_curves_nor(CurveRenderData *rdata,
 
   static const GPUVertFormat format = [&]() {
     GPUVertFormat format{};
-    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
     attr_id.rad = GPU_vertformat_attr_add(&format, "rad", gpu::VertAttrType::SFLOAT_32);
     attr_id.nor = GPU_vertformat_attr_add(
         &format, "nor", blender::gpu::VertAttrType::SNORM_10_10_10_2);
@@ -558,7 +558,7 @@ static void curve_create_edit_curves_nor(CurveRenderData *rdata,
 
   static const GPUVertFormat format_hq = [&]() {
     GPUVertFormat format{};
-    attr_id.pos_hq = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+    attr_id.pos_hq = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
     attr_id.rad_hq = GPU_vertformat_attr_add(&format, "rad", gpu::VertAttrType::SFLOAT_32);
     attr_id.nor_hq = GPU_vertformat_attr_add(&format, "nor", gpu::VertAttrType::SNORM_16_16_16_16);
     attr_id.tan_hq = GPU_vertformat_attr_add(
@@ -669,7 +669,7 @@ static void curve_create_edit_data_and_handles(CurveRenderData *rdata,
 
   static const GPUVertFormat format_pos = [&]() {
     GPUVertFormat format{};
-    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+    attr_id.pos = GPU_vertformat_attr_add(&format, "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
     return format;
   }();
 

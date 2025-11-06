@@ -71,7 +71,7 @@ static void extract_positions_bm(const MeshRenderData &mr, MutableSpan<float3> v
 gpu::VertBufPtr extract_positions(const MeshRenderData &mr)
 {
   static const GPUVertFormat format = GPU_vertformat_from_attribute(
-      "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+      "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
   gpu::VertBufPtr vbo = gpu::VertBufPtr(GPU_vertbuf_create_with_format(format));
   GPU_vertbuf_data_alloc(*vbo, mr.corners_num + mr.loose_indices_num);
 
@@ -133,7 +133,7 @@ gpu::VertBufPtr extract_positions_subdiv(const DRWSubdivCache &subdiv_cache,
                                          gpu::VertBufPtr *orco_vbo)
 {
   static const GPUVertFormat format = GPU_vertformat_from_attribute(
-      "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+      "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
   gpu::VertBufPtr vbo = gpu::VertBufPtr(
       GPU_vertbuf_create_on_device(format, subdiv_full_vbo_size(mr, subdiv_cache)));
 

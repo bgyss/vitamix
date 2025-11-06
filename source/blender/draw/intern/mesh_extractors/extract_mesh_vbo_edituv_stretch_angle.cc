@@ -239,7 +239,7 @@ gpu::VertBufPtr extract_edituv_stretch_angle_subdiv(const MeshRenderData &mr,
   if (!pos) {
     pos = GPU_vertbuf_calloc();
     static const GPUVertFormat pos_format = GPU_vertformat_from_attribute(
-        "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+        "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
     GPU_vertbuf_init_build_on_device(*pos, pos_format, subdiv_full_vbo_size(mr, subdiv_cache));
     draw_subdiv_extract_pos(subdiv_cache, pos, nullptr);
   }

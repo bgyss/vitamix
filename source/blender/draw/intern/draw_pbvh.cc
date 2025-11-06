@@ -282,7 +282,7 @@ BLI_NOINLINE static void free_batches(const MutableSpan<gpu::Batch *> batches,
 static const GPUVertFormat &position_format()
 {
   static const GPUVertFormat format = GPU_vertformat_from_attribute(
-      "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+      "pos", gpu::VertAttrType::SFLOAT_32_32_32_32);  /* Metal/Vulkan compatibility */
   return format;
 }
 
