@@ -4,6 +4,33 @@
 
 /** \file
  * \ingroup gpu
+ *
+ * Vulkan texture format conversion between host and device.
+ *
+ * ## 3-Component to 4-Component Migration (Phase 2)
+ *
+ * This file handles conversion between host and device texture formats. As part of the
+ * Metal/Vulkan compatibility migration, 3-component (RGB) formats are being phased out
+ * in favor of 4-component (RGBA) formats.
+ *
+ * **Current State (Phase 2):**
+ * - 3-component formats (e.g., SFLOAT_32_32_32, SFLOAT_16_16_16) are marked as deprecated
+ * - The Vulkan backend automatically converts 3-component host formats to 4-component device
+ *   formats (see lines 83-92: FLOAT3_TO_FLOAT4, FLOAT3_TO_HALF4)
+ * - All other deprecated 3-component formats are marked as UNSUPPORTED (correct behavior)
+ *
+ * **Migration Path:**
+ * 1. Phase 2-7: Update all code to use 4-component formats directly
+ * 2. Phase 8: Remove deprecated format definitions and conversion paths
+ * 3. Final: Vulkan backend only handles 4-component formats (no conversion needed)
+ *
+ * **Why 4-Component Formats?**
+ * - 3-component formats have <5% hardware support on Vulkan
+ * - 4-component formats have >90% hardware support
+ * - Eliminates need for software conversion layer
+ * - Native Metal support (no emulation)
+ *
+ * See: GPU_format_conversion.hh, GPU_format_deprecated.h, METAL_TEXTURE_FORMAT_MIGRATION_PLAN.md
  */
 
 #include "vk_data_conversion.hh"
@@ -80,12 +107,14 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
                                                const TextureFormat device_format)
 {
   if (host_format != device_format) {
-    if (host_format == TextureFormat::SFLOAT_16_16_16 &&
+    /* TODO(Phase 8): Remove these 3→4 component conversions once all code uses 4-component
+     * formats directly. These handle legacy host code still using deprecated RGB formats. */
+    if (host_format == TextureFormat::SFLOAT_16_16_16 &&  /* DEPRECATED */
         device_format == TextureFormat::SFLOAT_16_16_16_16)
     {
       return ConversionType::FLOAT3_TO_HALF4;
     }
-    if (host_format == TextureFormat::SFLOAT_32_32_32 &&
+    if (host_format == TextureFormat::SFLOAT_32_32_32 &&  /* DEPRECATED */
         device_format == TextureFormat::SFLOAT_32_32_32_32)
     {
       return ConversionType::FLOAT3_TO_FLOAT4;
@@ -107,7 +136,7 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
     case TextureFormat::SFLOAT_16_16_16_16:
     case TextureFormat::SFLOAT_16_16:
     case TextureFormat::SFLOAT_16:
-    case TextureFormat::SFLOAT_16_16_16:
+    case TextureFormat::SFLOAT_16_16_16:  /* DEPRECATED - remove in Phase 8 */
       return ConversionType::FLOAT_TO_HALF;
 
     case TextureFormat::SRGBA_8_8_8_8:
@@ -117,7 +146,7 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
       return ConversionType::FLOAT_TO_UNORM8;
 
     case TextureFormat::SNORM_8_8_8_8:
-    case TextureFormat::SNORM_8_8_8:
+    case TextureFormat::SNORM_8_8_8:  /* DEPRECATED - remove in Phase 8 */
     case TextureFormat::SNORM_8_8:
     case TextureFormat::SNORM_8:
       return ConversionType::FLOAT_TO_SNORM8;
@@ -128,7 +157,7 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
       return ConversionType::FLOAT_TO_UNORM16;
 
     case TextureFormat::SNORM_16_16_16_16:
-    case TextureFormat::SNORM_16_16_16:
+    case TextureFormat::SNORM_16_16_16:  /* DEPRECATED - remove in Phase 8 */
     case TextureFormat::SNORM_16_16:
     case TextureFormat::SNORM_16:
       return ConversionType::FLOAT_TO_SNORM16;
@@ -147,7 +176,7 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
       return ConversionType::PASS_THROUGH;
 
       /* #TextureFormat::SFLOAT_32_32_32 Not supported by vendors. */
-    case TextureFormat::SFLOAT_32_32_32:
+    case TextureFormat::SFLOAT_32_32_32:  /* DEPRECATED - handled by FLOAT3_TO_FLOAT4 above */
 
     case TextureFormat::UINT_8_8_8_8:
     case TextureFormat::SINT_8_8_8_8:
@@ -169,15 +198,16 @@ static ConversionType type_of_conversion_float(const TextureFormat host_format,
     case TextureFormat::SINT_32:
     case TextureFormat::UNORM_10_10_10_2:
     case TextureFormat::UINT_10_10_10_2:
-    case TextureFormat::UINT_8_8_8:
-    case TextureFormat::SINT_8_8_8:
-    case TextureFormat::UNORM_8_8_8:
-    case TextureFormat::UINT_16_16_16:
-    case TextureFormat::SINT_16_16_16:
-    case TextureFormat::UNORM_16_16_16:
-    case TextureFormat::UINT_32_32_32:
-    case TextureFormat::SINT_32_32_32:
-    case TextureFormat::SRGBA_8_8_8:
+    /* TODO(Phase 8): Remove all deprecated 3-component formats below once migration complete */
+    case TextureFormat::UINT_8_8_8:      /* DEPRECATED */
+    case TextureFormat::SINT_8_8_8:      /* DEPRECATED */
+    case TextureFormat::UNORM_8_8_8:     /* DEPRECATED */
+    case TextureFormat::UINT_16_16_16:   /* DEPRECATED */
+    case TextureFormat::SINT_16_16_16:   /* DEPRECATED */
+    case TextureFormat::UNORM_16_16_16:  /* DEPRECATED */
+    case TextureFormat::UINT_32_32_32:   /* DEPRECATED */
+    case TextureFormat::SINT_32_32_32:   /* DEPRECATED */
+    case TextureFormat::SRGBA_8_8_8:     /* DEPRECATED */
     case TextureFormat::UFLOAT_9_9_9_EXP_5:
     case TextureFormat::UNORM_16_DEPTH:
       return ConversionType::UNSUPPORTED;
@@ -547,7 +577,7 @@ static ConversionType type_of_conversion_uint248(const TextureFormat device_form
     case TextureFormat::SNORM_DXT5:
 
       /* #TextureFormat::SFLOAT_32_32_32 Not supported by vendors. */
-    case TextureFormat::SFLOAT_32_32_32:
+    case TextureFormat::SFLOAT_32_32_32:  /* DEPRECATED - handled by FLOAT3_TO_FLOAT4 above */
 
     case TextureFormat::UINT_8_8_8_8:
     case TextureFormat::SINT_8_8_8_8:
@@ -569,15 +599,16 @@ static ConversionType type_of_conversion_uint248(const TextureFormat device_form
     case TextureFormat::SINT_32:
     case TextureFormat::UNORM_10_10_10_2:
     case TextureFormat::UINT_10_10_10_2:
-    case TextureFormat::UINT_8_8_8:
-    case TextureFormat::SINT_8_8_8:
-    case TextureFormat::UNORM_8_8_8:
-    case TextureFormat::UINT_16_16_16:
-    case TextureFormat::SINT_16_16_16:
-    case TextureFormat::UNORM_16_16_16:
-    case TextureFormat::UINT_32_32_32:
-    case TextureFormat::SINT_32_32_32:
-    case TextureFormat::SRGBA_8_8_8:
+    /* TODO(Phase 8): Remove all deprecated 3-component formats below once migration complete */
+    case TextureFormat::UINT_8_8_8:      /* DEPRECATED */
+    case TextureFormat::SINT_8_8_8:      /* DEPRECATED */
+    case TextureFormat::UNORM_8_8_8:     /* DEPRECATED */
+    case TextureFormat::UINT_16_16_16:   /* DEPRECATED */
+    case TextureFormat::SINT_16_16_16:   /* DEPRECATED */
+    case TextureFormat::UNORM_16_16_16:  /* DEPRECATED */
+    case TextureFormat::UINT_32_32_32:   /* DEPRECATED */
+    case TextureFormat::SINT_32_32_32:   /* DEPRECATED */
+    case TextureFormat::SRGBA_8_8_8:     /* DEPRECATED */
     case TextureFormat::UFLOAT_9_9_9_EXP_5:
     case TextureFormat::UNORM_16_DEPTH:
       return ConversionType::UNSUPPORTED;
