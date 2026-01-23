@@ -11,11 +11,17 @@
 #include "DNA_listBase.h"
 
 #include "BLI_map.hh"
+#include "BLI_vector.hh"
 
+#include "SEQ_modifier.hh"
+
+namespace blender {
+
+struct MovieReader;
 struct Strip;
 struct StripModifierData;
 
-namespace blender::deg {
+namespace deg {
 
 struct Depsgraph;
 
@@ -30,9 +36,11 @@ class StripModifierDataBackup {
 
   bool isEmpty() const;
 
+  /* For Sound Modifiers. */
   void *sound_in;
   void *sound_out;
-  float *last_buf;
+  eStripModifierFlag flag;
+  uint64_t params_hash;
 };
 
 /* Backup of a single strip. */
@@ -47,9 +55,12 @@ class StripBackup {
 
   bool isEmpty() const;
 
-  void *scene_sound;
-  ListBase anims;
+  void *scene_sound;        /* AUD_SequenceEntry */
+  void *sound_time_stretch; /* AUD_Sound */
+  float sound_time_stretch_fps;
+  Vector<MovieReader *, 1> movie_readers;
   Map<int, StripModifierDataBackup> modifiers;
 };
 
-}  // namespace blender::deg
+}  // namespace deg
+}  // namespace blender
